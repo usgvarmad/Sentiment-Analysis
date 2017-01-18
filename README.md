@@ -1,59 +1,138 @@
 # cis520_twitter_sentiment_analysis
 
 
-The following is a description of the files:                                                                     
+% proj_final README.TXT
 
-You will be given tweets and corresponding images and your job is to correctly classify them as joy/sad.
-
-You will get:
-Training:
-4500 training examples with labels
-4500 training examples without labels
-
-We will have a leaderboard that displays your results and ranks on the testing set of 4500 examples.
-
-For your final evaluation we will test your algorithm on a validation set of 4500 examples.
+Group: GULTI
+Members: 
+Venkata Bharath Reddy Karnati (vbharath),
+Uzval Gopinath Dontiboyina (uzval),
+Bhargav Kalluri (bhargavk)
 
 
-File Description:
-1) color_description.csv
-	- file with description of the 32 features for train_color and train_unlabeled_color.mat
-2) reshape_img.m
-	- MATLAB script that converts the 1x30000 rows in train_raw_img.mat and train_unlabeled_raw_img.mat to an image
-3) topwords.csv
-	- The dictionary of words in descending order of counts
-4) predict_labels.m
-	- MATLAB function template giving the format for code submitted to the leaderboard
-	  We will call this function on our end to test your algorithms.
+The four methods we have implemented are: 
+Generative method: Naive Bayes
+Discriminative methods:Logistic Regression, LogitBoost, SVM, Cascading, Adaboost
+Instance-based method: K-nearest Neighbors  
+Semi-supervised dimensionality reduction of the data :PCA with SVM on images 
+   
 
-5) train_set/
-The rows of each matrix correspond across all the features.
+****IMPORTANT******
 
-For example, you can get the correct label for the ith row of the
-train_cnn_feat.mat feature by looking at the ith entry of the label
-matrix in the words_train.mat file.
+a)We have included the generated models in the "Models" folder.
+b)The final model that we got the highest accuracy for is there in the "Final Model" folder which can be executed by running the "predict_labels.m" file.
+c)To run the code to generate these models go to "Files_to_generate_models" folder, go through "testrun_demo.m" file and load all the parameters that you would need to run "predict_labels.m".
+(Note: "testrun_demo.m" file is a "predict_labels.m" file for all the methods)
+d)"colum_D_Bhargav.mat" contains a mixture of features which have been selected post binormal separation and features which have the highest IG values. 
+e)To test the models in the "Models" folder, Load them into workspace and run the "To test" code given in the method description.  
+*******************
 
-  - raw_tweets_train.mat
-	- Contains a 4500x1 matrix indicating the tweet ids
-	- Contains a 4500x1 struct containing the raw formats of the tweets
-  - words_train.mat
-	- Contains a 4500x10000 matrix indicating the tweet word counts
-	- Contains a 4500x1 matrix indicating the tweet label (1 is joy, 0 is sad)
-	- Contains a 4500x1 matrix indicating the tweet id
-  - train_raw_img.mat
-	- Contains a 4500x30000 matrix corresponding to the raw 100x100x3 image
-  - train_cnn_feat.mat
-	- Contains a 4500x4096 matrix that correspond to the last layer of a CNN
-  - train_img_prob.mat
-	- Contains a 4500x1365 matrix that corresponds to the scene/object probabilities
-  - train_color.mat
-	- Contains a 4500x32 matrix that corresponds to color features
-  - train_tweet_id_img.mat
-	- Contains a 4500x1 matrix that corresponds to the tweet id for the corresponding rows in the other feature matrices
-  
-6) train_unlabeled_set/
-  All the same as in train_set except:
-  - words_train_unlabeled.mat
-	- Contains a 4500x1000 matrix indicating the tweet word counts
-	- There is no label
-  
+
+
+**********************
+Method's Description:
+***********************
+1) Naive Bayes 
+***********************
+The Naive Bayes(Multinomial Naive Bayes) model was implemented for text (words) classification.
+This model was implemented based on ‘Text Classification using Naive Bayes’ by Hiroshi Shimodaira and various online tutorials. 
+ 
+
+To test: 
+[labels_NB, ys] = applyMNNB(prior, condprob, word_counts(:,cols_sel));
+*This was the model submitted as our final model.
+
+Accuracy: ~80.64%
+
+**************************
+2) Logistic Regression 
+**************************
+We used "fitclinear" to perform Logistic Regression on the train data to generate our model.
+
+
+To test: 
+[labels_Logistic, ys_Logistic] =predict(MdlFinal_Logistic ,word_counts(:,cols_sel));
+
+Accuracy: ~73.88%
+
+************************
+3) LogitBoost 
+************************
+We used "fitensemble" with "LogitBoost" and "1000" Trees as parameters on the train data to generate our model.
+
+To test: 
+[labels_ensemble,score_ensemble] = predict(ensemble_logitBoost ,full(word_counts(:,cols_sel)));
+
+Accuracy: ~80.02%
+
+**************************
+4) SVM with PCA on images 
+**************************
+We used "fitcsvm" with RBF kernel to perform SVM on PCA'ed image train data to generate our model.
+
+To Test: 
+[labels_SVM, ys_SVM] =predict(SVMModel_img  ,cnn_feat*coeff_img);
+
+Accuracy: ~ 64.63%
+
+**************************
+5) K-Nearest Neighbors
+**************************
+We used "fitcknn" with 3 nearest neighbors to generate our model.
+
+To test: 
+[labels_KNN,score_KNN] = predict(mdl_knn  ,full(word_count));
+
+Accuracy: ~ 65.76%
+
+*******************
+6) SVM on words
+*******************
+We used "fitcsvm" with linear kernel to perform SVM on word train data to generate our model.
+
+To test: 
+[labels_svm_words,score_svm_words] = predict(SVMModel_words   ,full(word_counts(:,cols_sel)));
+
+
+Accuracy: ~74.33%
+
+*******************
+7) Adaboost 
+*******************
+We used "fitensemble" with "AdaBoostM1" and "1000" Trees as parameters on the train data to generate our model.
+
+To test:
+    [labels_adaboost,score_boost] = predict(ensemble_adaBoost  ,full(word_counts(:,cols_sel)));
+	
+
+Accuracy: ~75.02%
+
+*************
+8) Cascading
+**************
+We performed "Naive Bayes" on words and "PCA with SVM" on images. Then finally performed "Logistic Regression" on normalized scores of above models. 
+
+
+To test:
+[labels_NB, ys_NB] = applyMNNB(prior, condprob, word_counts(:,cols_sel));
+[labels_SVM, ys_SVM] =predict(SVMModel_img  ,cnn_feat*coeff_img);
+ score_2 = ys_SVM';
+      score_2 = bsxfun(@minus,score_2,mean(score_2));
+     ys_SVM= score_2';
+     new_Score = [ys_NB(:,1) ys_SVM(:,1)];
+[labels_cascading] = predict(bag_new_score , new_Score );
+
+
+Accuracy: ~80.24%
+
+***************************
+9)PCA with LogitBoost
+****************************
+We used "fitensemble" with "LogitBoost" and "1000" Trees as parameters on the PCA'ed train data to generate our model.
+
+To Test:
+
+[labels_logistboost_PCA] = predict(ensemble_logitboost_PCA ,full(word_counts*coeff_words ));
+
+
+Accuracy: ~75.20%
